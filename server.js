@@ -1,8 +1,12 @@
+<<<<<<< HEAD
 require('dotenv').config();
+=======
+>>>>>>> 16f32231449ec1d6a599acd0e77e57cdf60ee135
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+<<<<<<< HEAD
 // Initialize Express
 const app = express();
 // Twilio configuration
@@ -11,6 +15,23 @@ const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require('twilio')(accountSid, authToken);
 
 // Middleware
+=======
+const twilio = require('twilio');
+// Initialize Express
+const app = express();
+
+// Twilio configuration
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioClient = new twilio(accountSid, authToken);
+
+// Middleware
+let origin = {
+  origin : ["http://localhost:3000"],
+}
+app.use(cors(origin)); 
+
+>>>>>>> 16f32231449ec1d6a599acd0e77e57cdf60ee135
 app.use(bodyParser.json());
 app.use(express.json());
 
@@ -24,7 +45,10 @@ mongoose.connect('mongodb+srv://jebershon:OHnDfPaiRvidyxPl@cluster0.df4l8.mongod
 
 // Start the server
 app.listen(3001, () => {
+<<<<<<< HEAD
   console.log("id : "+process.env.TWILIO_ACCOUNT_SID);
+=======
+>>>>>>> 16f32231449ec1d6a599acd0e77e57cdf60ee135
   console.log(`Server is running on port 3001`);
 });
 
@@ -48,9 +72,15 @@ app.post('/users', async (req, res) => {
     await newUser.save();
 
     // Send welcome SMS using Twilio
+<<<<<<< HEAD
     client.messages.create({
       body: `Hello ${name}, welcome to our application!`,
       from: '+18568041545', // Replace with your Twilio phone number
+=======
+    twilioClient.messages.create({
+      body: `Hello ${name}, welcome to our application!`,
+      from: 'your_twilio_phone_number', // Replace with your Twilio phone number
+>>>>>>> 16f32231449ec1d6a599acd0e77e57cdf60ee135
       to: phone, // Send SMS to user's phone
     }).then(message => {
       console.log(`SMS sent: ${message.sid}`);
