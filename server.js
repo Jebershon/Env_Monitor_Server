@@ -3,7 +3,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-// Initialize Express
 const app = express();
 // Twilio configuration
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -28,15 +27,9 @@ app.listen(3001, () => {
   console.log(`Server is running on port 3001`);
 });
 
-// Define the User schema
-const userSchema = new mongoose.Schema({
-  name: String,
-  phone: String,  // This will store the user's phone number for sending SMS
-  email: String,
-});
-
-// Create the User model
-const User = mongoose.model('User', userSchema);
+// ----------------------------------------Server configuration--------------------------------------
+const User = require('./Models/userSchema');
+const SensorData = require('./Models/readings'); 
 
 // Create a new user and send a welcome SMS
 app.post('/users', async (req, res) => {
@@ -50,8 +43,8 @@ app.post('/users', async (req, res) => {
     // Send welcome SMS using Twilio
     client.messages.create({
       body: `Hello ${name}, welcome to our application!`,
-      from: '+18568041545', // Replace with your Twilio phone number
-      to: phone, // Send SMS to user's phone
+      from: '+18568041545',
+      to: phone,
     }).then(message => {
       console.log(`SMS sent: ${message.sid}`);
     }).catch(error => {
@@ -114,3 +107,64 @@ app.delete('/users/:id', async (req, res) => {
   }
 });
 
+// CRUD Operations for Readings
+
+// Create
+app.post('/sensors', async (req, res) => {
+  try {
+    const sensor = new SensorData(req.body);
+    await sensor.save();
+    res.status(201).json(sensor);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Read all
+app.get('/sensors', async (req, res) => {
+  try {
+    const sensors = await SensorData.find();
+    res.json(sensors);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Read one
+app.get('/sensors/:id', async (req, res) => {
+  try {
+    const sensor = await SensorData.findById(req.params.id);
+    if (!sensor) {
+      return res.status(404).json({ error: 'Sensor data not found' });
+    }
+    res.json(sensor);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update
+app.put('/sensors/:id', async (req, res) => {
+  try {
+    const sensor = await SensorData.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!sensor) {
+      return res.status(404).json({ error: 'Sensor data not found' });
+    }
+    res.json(sensor);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete
+app.delete('/sensors/:id', async (req, res) => {
+  try {
+    const sensor = await SensorData.findByIdAndDelete(req.params.id);
+    if (!sensor) {
+      return res.status(404).json({ error: 'Sensor data not found' });
+    }
+    res.json({ message: 'Sensor data deleted' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
