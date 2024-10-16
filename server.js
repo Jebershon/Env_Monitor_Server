@@ -35,6 +35,17 @@ app.listen(3001, () => {
 const User = require('./Models/userSchema');
 const SensorData = require('./Models/readings'); 
 
+app.post('/send-sms', (req, res) => {
+  const { to, message } = req.body;
+  client.messages.create({
+          body: message,
+          from: '+18568041545', 
+          to: to 
+      })
+      .then((message) => res.status(200).send(`Message sent: ${message.sid}`))
+      .catch((error) => res.status(500).send(`Error: ${error.message}`));
+});
+
 // Create a new user and send a welcome SMS
 app.post('/users', async (req, res) => {
   try {
