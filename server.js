@@ -12,7 +12,11 @@ const client = require('twilio')(accountSid, authToken);
 // Middleware
 app.use(bodyParser.json());
 app.use(express.json());
-
+app.use(cors({
+  origin:["https://env-monitor.vercel.app"],
+  methods:["GET","PUT","POST","DELETE"],
+  credentials:true
+}));
 
 // Connect to MongoDB Atlas
 mongoose.connect('mongodb+srv://jebershon:OHnDfPaiRvidyxPl@cluster0.df4l8.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0').then(() => {
