@@ -39,7 +39,7 @@ app.post('/send-sms', (req, res) => {
   const { to, message } = req.body;
   client.messages.create({
           body: message,
-          from: '+18568041545', 
+          from: '+919342629075', 
           to: to 
       })
       .then((message) => res.status(200).send(`Message sent: ${message.sid}`))
@@ -49,15 +49,15 @@ app.post('/send-sms', (req, res) => {
 // Create a new user and send a welcome SMS
 app.post('/users', async (req, res) => {
   try {
-    const { name, phone, email } = req.body;
+    const { name, phone, email,password } = req.body;
 
     // Create new user in MongoDB
-    const newUser = new User({ name, phone, email });
+    const newUser = new User({ name, phone, email, password });
     await newUser.save();
 
     // Send welcome SMS using Twilio
     client.messages.create({
-      body: `Hello ${name}, welcome to our application!`,
+      body: `Hello ${name}, welcome to our application! your password : ${password}`,
       from: '+18568041545',
       to: phone,
     }).then(message => {
@@ -98,8 +98,8 @@ app.get('/users/:id', async (req, res) => {
 // Update a user by ID
 app.put('/users/:id', async (req, res) => {
   try {
-    const { name, phone, email } = req.body;
-    const user = await User.findByIdAndUpdate(req.params.id, { name, phone, email }, { new: true });
+    const { name, phone, email, password } = req.body;
+    const user = await User.findByIdAndUpdate(req.params.id, { name, phone, email, password }, { new: true });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
