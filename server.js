@@ -3,6 +3,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const app = express();
 // Twilio configuration
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -24,16 +26,35 @@ mongoose.connect('mongodb+srv://jebershon:OHnDfPaiRvidyxPl@cluster0.df4l8.mongod
 }).catch(err => {
   console.error('MongoDB connection error:', err);
 });
-
+const decoded = jwt.decode("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjkyMjk1OTMsImV4cCI6MTcyOTIzMzE5M30.9lnuPepMMX-sIRNWY7bCV3moXqQBLiRx5YfwZAGvja8");
 // Start the server
 app.listen(3001, () => {
   console.log("id : "+process.env.TWILIO_ACCOUNT_SID);
   console.log(`Server is running on port 3001`);
+  console.log(decoded);
 });
 
 // ----------------------------------------Server configuration--------------------------------------
 const User = require('./Models/userSchema');
 const SensorData = require('./Models/readings'); 
+
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  // Find user by email
+  const u = await User.findOne({ email });
+  const user = u.email === email;
+  if (!user) {
+      return res.status(401).send('Invalid credentials');
+  }
+  // Check if password is correct
+  const isPasswordValid = u.password === password;
+  if (!isPasswordValid) {
+      return res.status(401).send('Invalid credentials');
+  }
+  // Generate JWT token
+  const token = jwt.sign({ id: user.id, email: user.email, name:user.name }, process.env.JWT_SECRET, {expiresIn: '1h'});
+  res.json({ token });
+});
 
 app.post('/send-sms', (req, res) => {
   const { to, message } = req.body;
