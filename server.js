@@ -52,7 +52,7 @@ app.post('/login', async (req, res) => {
       return res.status(401).send('Invalid credentials');
   }
   // Generate JWT token
-  const token = jwt.sign({ id: u.id, email: u.email, name:u.name }, process.env.JWT_SECRET, {expiresIn: '1h'});
+  const token = jwt.sign({ id: u.id, email: u.email, name:u.name,phone:u.phone }, process.env.JWT_SECRET, {expiresIn: '1h'});
   res.json({ token });
 });
 
