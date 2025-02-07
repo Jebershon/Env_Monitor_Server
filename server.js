@@ -40,37 +40,49 @@ const SensorData = require('./Models/readings');
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
+  console.log(`Login attempt for email: ${email}`);
   // Find user by email
   const u = await User.findOne({ email });
-  const user = u.email === email;
+  const user = u && u.email === email;
   if (!user) {
+      console.log('Invalid credentials');
       return res.status(401).send('Invalid credentials');
   }
   // Check if password is correct
   const isPasswordValid = u.password === password;
   if (!isPasswordValid) {
+      console.log('Invalid credentials');
       return res.status(401).send('Invalid credentials');
   }
   // Generate JWT token
   const token = jwt.sign({ id: u.id, email: u.email, name:u.name,phone:u.phone }, process.env.JWT_SECRET, {expiresIn: '1h'});
+  console.log(`JWT token generated for email: ${email}`);
   res.json({ token });
 });
 
 app.post('/send-sms', (req, res) => {
   const { to, message } = req.body;
+  console.log(`Sending SMS to: ${to}`);
   client.messages.create({
           body: message,
-          from: '+18568041545', 
+          from: '+15674722775', 
           to: to 
       })
-      .then((message) => res.status(200).send(`Message sent: ${message.sid}`))
-      .catch((error) => res.status(500).send(`Error: ${error.message}`));
+      .then((message) => {
+        console.log(`Message sent: ${message.sid}`);
+        res.status(200).send(`Message sent: ${message.sid}`);
+      })
+      .catch((error) => {
+        console.error(`Error sending SMS: ${error.message}`);
+        res.status(500).send(`Error: ${error.message}`);
+      });
 });
 
 // Create a new user and send a welcome SMS
 app.post('/users', async (req, res) => {
   try {
     const { name, phone, email,password } = req.body;
+    console.log(`Creating new user: ${email}`);
 
     // Create new user in MongoDB
     const newUser = new User({ name, phone, email, password });
@@ -89,6 +101,7 @@ app.post('/users', async (req, res) => {
 
     res.status(201).json(newUser);
   } catch (error) {
+    console.error('Failed to create user:', error);
     res.status(500).json({ error: 'Failed to create user' });
   }
 });
@@ -96,9 +109,11 @@ app.post('/users', async (req, res) => {
 // Get all users
 app.get('/users', async (req, res) => {
   try {
+    console.log('Fetching all users');
     const users = await User.find();
     res.json(users);
   } catch (error) {
+    console.error('Failed to fetch users:', error);
     res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
@@ -106,12 +121,15 @@ app.get('/users', async (req, res) => {
 // Get a single user by ID
 app.get('/users/:id', async (req, res) => {
   try {
+    console.log(`Fetching user with ID: ${req.params.id}`);
     const user = await User.findById(req.params.id);
     if (!user) {
+      console.log('User not found');
       return res.status(404).json({ error: 'User not found' });
     }
     res.json(user);
   } catch (error) {
+    console.error('Failed to fetch user:', error);
     res.status(500).json({ error: 'Failed to fetch user' });
   }
 });
@@ -120,12 +138,15 @@ app.get('/users/:id', async (req, res) => {
 app.put('/users/:id', async (req, res) => {
   try {
     const { name, phone, email, password } = req.body;
+    console.log(`Updating user with ID: ${req.params.id}`);
     const user = await User.findByIdAndUpdate(req.params.id, { name, phone, email, password }, { new: true });
     if (!user) {
+      console.log('User not found');
       return res.status(404).json({ error: 'User not found' });
     }
     res.json(user);
   } catch (error) {
+    console.error('Failed to update user:', error);
     res.status(500).json({ error: 'Failed to update user' });
   }
 });
@@ -133,12 +154,15 @@ app.put('/users/:id', async (req, res) => {
 // Delete a user by ID
 app.delete('/users/:id', async (req, res) => {
   try {
+    console.log(`Deleting user with ID: ${req.params.id}`);
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
+      console.log('User not found');
       return res.status(404).json({ error: 'User not found' });
     }
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
+    console.error('Failed to delete user:', error);
     res.status(500).json({ error: 'Failed to delete user' });
   }
 });
@@ -148,10 +172,12 @@ app.delete('/users/:id', async (req, res) => {
 // Create
 app.post('/sensors', async (req, res) => {
   try {
+    console.log('Creating new sensor data');
     const sensor = new SensorData(req.body);
     await sensor.save();
     res.status(201).json(sensor);
   } catch (error) {
+    console.error('Failed to create sensor data:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -159,9 +185,11 @@ app.post('/sensors', async (req, res) => {
 // Read all
 app.get('/sensors', async (req, res) => {
   try {
+    console.log('Fetching all sensor data');
     const sensors = await SensorData.find();
     res.json(sensors);
   } catch (error) {
+    console.error('Failed to fetch sensor data:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -169,12 +197,15 @@ app.get('/sensors', async (req, res) => {
 // Read one
 app.get('/sensors/:id', async (req, res) => {
   try {
+    console.log(`Fetching sensor data with ID: ${req.params.id}`);
     const sensor = await SensorData.findById(req.params.id);
     if (!sensor) {
+      console.log('Sensor data not found');
       return res.status(404).json({ error: 'Sensor data not found' });
     }
     res.json(sensor);
   } catch (error) {
+    console.error('Failed to fetch sensor data:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -182,12 +213,15 @@ app.get('/sensors/:id', async (req, res) => {
 // Update
 app.put('/sensors/:id', async (req, res) => {
   try {
+    console.log(`Updating sensor data with ID: ${req.params.id}`);
     const sensor = await SensorData.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!sensor) {
+      console.log('Sensor data not found');
       return res.status(404).json({ error: 'Sensor data not found' });
     }
     res.json(sensor);
   } catch (error) {
+    console.error('Failed to update sensor data:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -195,12 +229,15 @@ app.put('/sensors/:id', async (req, res) => {
 // Delete
 app.delete('/sensors/:id', async (req, res) => {
   try {
+    console.log(`Deleting sensor data with ID: ${req.params.id}`);
     const sensor = await SensorData.findByIdAndDelete(req.params.id);
     if (!sensor) {
+      console.log('Sensor data not found');
       return res.status(404).json({ error: 'Sensor data not found' });
     }
     res.json({ message: 'Sensor data deleted' });
   } catch (error) {
+    console.error('Failed to delete sensor data:', error);
     res.status(500).json({ error: error.message });
   }
 });
